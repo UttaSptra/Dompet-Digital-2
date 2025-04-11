@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -13,7 +15,16 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('auth.login');
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+Route::middleware(['auth', 'is_admin'])->group(function () {
+    Route::get('/admin', [HomeController::class, 'adminindex'])->name('admin.index');
+    Route::post('/admin', [HomeController::class, 'adminstore'])->name('admin.index');
+    Route::get('/admin/edit/{id}', [HomeController::class, 'adminedit'])->name('admin.edit');
+    Route::post('/admin', [HomeController::class, 'adminupdate'])->name('admin.index');
+    Route::delete('/admin/delete/{id}', [HomeController::class, 'delete'])->name('admin.delete');
 });
 
+Route::get('/dashboard', [HomeController::class, 'dashboard'])->middleware('auth')->name('dashboard');
