@@ -14,6 +14,7 @@ class Transaction extends Model
         'amount',
         'status',
         'target_transfer',
+        'account_number',
     ];
 
     public function user()

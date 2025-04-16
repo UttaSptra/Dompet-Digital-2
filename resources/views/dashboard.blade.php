@@ -1,112 +1,118 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
 <body class="bg-light">
+<form action="{{ route('logout') }}" method="POST">
+    @csrf
+    <button type="submit" class="btn btn-danger">Logout</button>
+</form>
+{{-------------------------------------------------------------- START ADMIN SPACE--------------------------------------------------------------}}
+@if($content == 'admin_content')
+    <div class="admin-section">
+        <h2>Admin Dashboard</h2>
+        <div class="container py-5">
+            {{-- Box Daftar User --}}
+            <div class="card mb-4 shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">List User</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Nama</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($users as $user)
+                            <tr>
+                                <td>{{ $user->name }}</td>
+                                <td>{{ $user->email }}</td>
+                                <td>
+                                    @if($user->role_id == 1)
+                                        <span>Admin</span>
+                                    @elseif($user->role_id == 2)
+                                        <span>Bank</span>
+                                    @else
+                                        <span>Siswa</span>
+                                    @endif
+                                </td>
+                                <td>
+                                <a href="javascript:void(0)" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editModal" data-user-id="{{ $user->id }}" data-user-name="{{ $user->name }}" data-user-email="{{ $user->email }}">Edit</a>
 
-{{--------------------------------------------------------------ADMIN SPACE--------------------------------------------------------------}}
-<div class="container py-5">
-    {{-- Box Daftar User --}}
-    <div class="card mb-4 shadow">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">List User</h5>
-        </div>
-        <div class="card-body">
-            <table class="table table-bordered table-hover mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Nama</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($users as $user)
-                    <tr>
-                        <td>{{ $user->name }}</td>
-                        <td>{{ $user->email }}</td>
-                        <td>
-                            @if($user->role_id == 1)
-                                <span>Admin</span>
-                            @elseif($user->role_id == 2)
-                                <span>Bank</span>
-                            @else
-                                <span>Siswa</span>
-                            @endif
-                        </td>
-                        <td>
-                        <a href="javascript:void(0)" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editModal" data-user-id="{{ $user->id }}" data-user-name="{{ $user->name }}" data-user-email="{{ $user->email }}">Edit</a>
-
-                            <form action="{{ route("admin.delete", $user->id) }}" method="POST" class="d-inline">
-                                @csrf
-                                @method('DELETE')    
-                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this user?')">Hapus</button>
-                            </form>
-                        </td>
-                    </tr>
-                    @endforeach
-
-                    @if ($users->isEmpty())
-                    <tr>
-                        <td colspan="4" class="text-center text-muted">Belum ada user.</td>
-                    </tr>
-                    @endif
-                </tbody>
-            </table>
-            <div class="container">
-                <h1 class="mb-0">Create New User</h1>
-
-                @if(session('success'))
-                    <div class="alert alert-success">{{ session('success') }}</div>
-                @endif
-
-                @if($errors->any())
-                    <div class="alert alert-danger">
-                        <ul>
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
+                                    <form action="{{ route("admin.delete", $user->id) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @method('DELETE')    
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this user?')">Hapus</button>
+                                    </form>
+                                </td>
+                            </tr>
                             @endforeach
-                        </ul>
-                    </div>
-                @endif
 
-                <form action="{{ route('admin.store') }}" method="POST">
-                    @csrf
-                    <div class="mb-3">
-                        <label for="name" class="form-label">Name</label>
-                        <input type="text" name="name" class="form-control" value="{{ old('name') }}">
-                    </div>
+                            @if ($users->isEmpty())
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">Belum ada user.</td>
+                            </tr>
+                            @endif
+                        </tbody>
+                    </table>
+                    <div class="container">
+                        <h1 class="mb-0">Create New User</h1>
 
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Email</label>
-                        <input type="email" name="email" class="form-control" value="{{ old('email') }}">
-                    </div>
+                        @if(session('success'))
+                            <div class="alert alert-success">{{ session('success') }}</div>
+                        @endif
 
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
-                        <input type="password" name="password" class="form-control">
-                    </div>
+                        @if($errors->any())
+                            <div class="alert alert-danger">
+                                <ul>
+                                    @foreach($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
 
-                    <div class="mb-3">
-                        <label for="password_confirmation" class="form-label">Confirm Password</label>
-                        <input type="password" name="password_confirmation" class="form-control" required>
-                    </div>
+                        <form action="{{ route('admin.store') }}" method="POST">
+                            @csrf
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Name</label>
+                                <input type="text" name="name" class="form-control" value="{{ old('name') }}">
+                            </div>
 
-                    <div class="mb-3">
-                        <label for="role_id" class="form-label">Role</label>
-                        <select name="role_id" id="form-control">
-                            <option value="1">Admin</option>
-                            <option value="2">Bank</option>
-                            <option value="3" selected>Siswa</option>
-                        </select>
-                    </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" name="email" class="form-control" value="{{ old('email') }}">
+                            </div>
 
-                    <button type="submit" class="btn btn-primary">Add User</button>
-                </form>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" name="password" class="form-control">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password_confirmation" class="form-label">Confirm Password</label>
+                                <input type="password" name="password_confirmation" class="form-control" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="role_id" class="form-label">Role</label>
+                                <select name="role_id" id="form-control">
+                                    <option value="1">Admin</option>
+                                    <option value="2">Bank</option>
+                                    <option value="3" selected>Siswa</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Add User</button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</div>
-
 {{-- Modal Edit User --}}
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -148,8 +154,6 @@
   </div>
 </div>
 
-
-
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     //Ambil semua tombol edit
@@ -175,24 +179,106 @@
 
 
 
-{{--------------------------------------------------------------BANK SPACE--------------------------------------------------------------}}
-<div class="container mt-4">
-    <h2 class="mb-4">Top-up Submission List</h2>
-    
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
-    
-    @if(session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
-    @endif
-    <form action="{{ route('bank.cash.deposit', $user->id) }}" method="POST">
-    @csrf
-    <div class="mb-3">
-        <label for="amount" class="form-label">Jumlah Deposit</label>
-        <input type="number" class="form-control" id="amount" name="amount" min="1" required>
+{{--------------------------------------------------------------START BANK SPACE--------------------------------------------------------------}}
+@elseif($content == 'bank_content')
+<div class="siswa-section">
+    <h2>Siswa Dashboard</h2>
+    <div class="container py-5">
+        <div class="row">
+            <!-- Kartu di kiri -->
+            <div class="col-md-6">
+                <div class="card mb-4 shadow p-4">
+                    <h2 class="mb-4">Top-up Submission List</h2>
+                    
+                    @if(session('success'))
+                        <div class="alert alert-success">{{ session('success') }}</div>
+                    @endif
+                    
+                    @if(session('error'))
+                        <div class="alert alert-danger">{{ session('error') }}</div>
+                    @endif
+                    
+                    <form action="{{ route('bank.cash.deposit', $user->id) }}" method="POST">
+                        @csrf
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Jumlah Deposit</label>
+                            <input type="number" class="form-control" id="amount" name="amount" min="1" required>
+                        </div>
+
+                        <div class="mb-3">
+                    <label for="account_number" class="form-label">Nomor Rekening</label>
+                    <input type="text" class="form-control" id="account_number" name="account_number" required>
+                </div>
+                        <button type="submit" class="btn btn-primary">Deposit</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Kartu di kanan -->
+            <div class="col-md-6">
+                <div class="card mb-4 shadow p-4">
+                    <h2 class="mb-4">Penarikan Tunai</h2>
+                    @if(session('success'))
+                        <div class="alert alert-success">{{ session('success') }}</div>
+                    @endif
+                    
+                    @if(session('error'))
+                        <div class="alert alert-danger">{{ session('error') }}</div>
+                    @endif
+                    <form action="{{ route('bank.cash.withdraw', $user->id) }}" method="POST">
+                    @csrf
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Jumlah Tarik Tunai</label>
+                            <input type="number" class="form-control" id="amount" name="amount" min="1" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Nomor Rekening</label>
+                            <input type="text" class="form-control" id="account_number" name="account_number" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Tarik</button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-    <button type="submit" class="btn btn-primary">Deposit</button>
+</div>
+
+
+<div class="container py-5">
+    <div class="card mb-4 shadow">
+        <div class="container">
+            <h1 class="mb-0">Create New User</h1>
+            <form action="{{ route('bank.create.user') }}" method="POST">
+                @csrf
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name</label>
+                    <input type="text" name="name" class="form-control">
+                </div>
+
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" name="email" class="form-control">
+                </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" name="password" class="form-control">
+                </div>
+
+                <div class="mb-3">
+                    <label for="password_confirmation" class="form-label">Confirm Password</label>
+                    <input type="password" name="password_confirmation" class="form-control" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Add User</button>
+            </form>
+        </div>
+    </div>
+</div>
+    {{-- Box Daftar User --}}
+    
+<div class="container mt-4">  
 </form>
     <div class="card shadow-sm p-4">
         @if($top_up->isEmpty())
@@ -233,6 +319,84 @@
         @endif
     </div>
 </div>
+{{--------------------------------------------------------------END BANK SPACE--------------------------------------------------------------}}
 
+{{--------------------------------------------------------------START SISWA SPACE--------------------------------------------------------------}}
+@elseif($content == 'siswa_content')
+<div class="bank-mini-section">
+                <h2>Siswa Dashboard</h2>
+<div class="container py-4">
+    <h2 class="mb-4">Dompet Digital Siswa</h2>
 
+    {{-- Alert --}}
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
+
+    <div class="row">
+        {{-- Top-up --}}
+        <div class="col-md-4">
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Top-up</h5>
+                    <form action="{{ route('siswa.topup') }}" method="POST">
+                        @csrf
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Jumlah Top-up</label>
+                            <input type="number" class="form-control" name="amount" min="1000" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Top-up</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {{-- Withdraw --}}
+        <div class="col-md-4">
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Tarik Tunai</h5>
+                    <form action="{{ route('siswa.withdraw') }}" method="POST">
+                        @csrf
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Jumlah Penarikan</label>
+                            <input type="number" class="form-control" name="amount" min="1000" required>
+                        </div>
+                        <button type="submit" class="btn btn-warning w-100">Tarik Tunai</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {{-- Transfer --}}
+        <div class="col-md-4">
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Transfer ke Siswa Lain</h5>
+                    <form action="{{ route('siswa.transfer') }}" method="POST">
+                        @csrf
+                        <div class="mb-3">
+                            <label for="to_account" class="form-label">No Rekening Tujuan</label>
+                            <input type="text" class="form-control" name="to_account" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Jumlah Transfer</label>
+                            <input type="number" class="form-control" name="amount" min="1000" required>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">Transfer</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@else
+<div class="default-section">
+                <p>Welcome to the Dashboard!</p>
+</div>
+@endif
+{{--------------------------------------------------------------END SISWA SPACE--------------------------------------------------------------}}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>

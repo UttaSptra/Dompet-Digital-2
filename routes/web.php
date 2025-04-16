@@ -33,6 +33,15 @@ Route::middleware(['auth', 'is_bank'])->group(function () {
     Route::post('/bank/topups/{id}/approve', [HomeController::class, 'bankapprove'])->name('bank.topups.approve');
     Route::post('/bank/topups/{id}/reject', [HomeController::class, 'bankreject'])->name('bank.topups.reject');
     Route::post('/bank/cash-deposit/{userId}', [HomeController::class, 'bankcashdeposit'])->name('bank.cash.deposit');
+    Route::post('/bank/cash-withdraw/{userId}', [HomeController::class, 'bankwithdraw'])->name('bank.cash.withdraw');
+    Route::post('/bank/create-user', [HomeController::class, 'bankcreateuser'])->name('bank.create.user');
+});
+
+Route::middleware(['auth', 'is_siswa'])->group(function () {
+    Route::get('/siswa', [HomeController::class, 'siswaindex'])->name('siswa.index');
+    Route::post('/siswa/topups', [HomeController::class, 'siswatop_up'])->name('siswa.topup');
+    Route::post('/siswa/transfer', [HomeController::class, 'siswatransfer'])->name('siswa.transfer');
+    Route::post('/siswa/withdraw', [HomeController::class, 'siswawithdraw'])->name('siswa.withdraw');
 });
 
 Route::get('/dashboard', [HomeController::class, 'dashboard'])->middleware('auth')->name('dashboard');
