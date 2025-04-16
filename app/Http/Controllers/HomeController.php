@@ -132,6 +132,8 @@ class HomeController extends Controller
             return back()->with('error', 'Transaksi sudah diproses sebelumnya.');
         }
 
+        $transaction->approved_by = Auth::id(); 
+        
         if ($transaction->type === 'top_up') {
             // APPROVE TOP-UP: tambahkan saldo
             $user->balance += $transaction->amount;
@@ -310,43 +312,45 @@ class HomeController extends Controller
         return back()->with('success', 'Top-up request successfully submitted!');
     }
 
-    public function siswatransfer (Request $request )
+    public function siswatransfer(Request $request)
     {
         $request->validate([
-            'target_transfer' => 'required|exists:users,account_number|different:account_number',
-            'amount' => 'required|numeric|min:1',
+            'target_transfer' => 'required|exists:users,account_number',
+            'amount' => 'required|numeric|min:1000',
         ]);
 
-         // Ambil pengguna pengirim dan penerima berdasarkan account_number
-         $fromUser = User::where('account_number', $request->account_number)->first();
-         $toUser = User::where('account_number', $request->target_transfer)->first();
-         $amount = $request->amount;
+        $fromUser = Auth::user();
 
-        // Cek saldo cukup
-        if ($fromUser->balance > $amount) {
-            return response()->json(['message' => 'Your balance is insufficient!'], 400);
+        if ($request->target_transfer === $fromUser->account_number) {
+            return response()->json(['message' => 'You cannot transfer to your own account!'], 400);
         }
 
-        DB::transaction(function () use ($fromUser, $toUser, $amount, $request) {
-            // Kurangi saldo pengirim
-            $fromUser->decrement('balance', $amount);
+        $toUser = User::where('account_number', $request->target_transfer)->first();
+        $amount = $request->amount;
 
-            // Tambah saldo penerima
+        if ($fromUser->balance < $amount) {
+            return redirect()->back()->with('success', 'Your balance is insufficient!');
+        }
+
+        DB::transaction(function () use ($fromUser, $toUser, $amount) {
+            $fromUser->decrement('balance', $amount);
             $toUser->increment('balance', $amount);
 
-             // Simpan history transfer
-             Transaction::create([
+            Transaction::create([
                 'user_id' => $fromUser->id,
                 'to_user_id' => $toUser->id,
-                'account_number' => Auth::user()->account_number, 
-                'target_transfer' => $request->target_transfer,
-                'amount' => $request->amount,
+                'account_number' => $fromUser->account_number,
+                'target_transfer' => $toUser->account_number,
+                'amount' => $amount,
+                'type' => 'transfer',
                 'status' => 'approved',
             ]);
         });
-        \Log::info('Transfer successful', ['user' => Auth::user()->id, 'amount' => $amount]);
-        return response()->json(['message' => 'Transfer successfully!']);
+
+        return redirect()->back()->with('success', 'Transfer successfully!');
+
     }
+
 
     public function siswawithdraw(Request $request)
     {
@@ -356,20 +360,20 @@ class HomeController extends Controller
 
         $user = Auth::user();
 
-        // Cek saldo cukup
+        #Cek saldo cukup
         if ($user->balance < $request->amount) {
             return back()->with('error', 'Your balance is insufficient for this transaction.');
         }
 
-        // Mulai transaksi database
+        #Mulai transaksi database
         DB::beginTransaction();
 
         try {
-            // Update saldo user
+            #Update saldo user
             $user->balance -= $request->amount;
             $user->save();
 
-            // Siapkan data transaksi
+            #Siapkan data transaksi
             $transactionData = [
                 'user_id' => $user->id,
                 'account_number' => $user->account_number,
@@ -378,10 +382,10 @@ class HomeController extends Controller
                 'status' => 'pending',
             ];
 
-            // Simpan data transaksi
+            #Simpan data transaksi
             Transaction::create($transactionData);
 
-            DB::commit();  // Commit perubahan
+            DB::commit();  
 
             return back()->with('success', 'Your withdrawal request has been submitted and is waiting for bank approval.');
         } catch (\Exception $e) {
