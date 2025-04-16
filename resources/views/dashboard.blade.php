@@ -1,118 +1,174 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-<body class="bg-light">
-<form action="{{ route('logout') }}" method="POST">
+    
+<form action="{{ route('logout') }}" method="POST" class="text-end mb-4">
     @csrf
     <button type="submit" class="btn btn-danger">Logout</button>
 </form>
+
 {{-------------------------------------------------------------- START ADMIN SPACE--------------------------------------------------------------}}
 @if($content == 'admin_content')
-    <div class="admin-section">
-        <h2>Admin Dashboard</h2>
-        <div class="container py-5">
-            {{-- Box Daftar User --}}
-            <div class="card mb-4 shadow">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">List User</h5>
-                </div>
-                <div class="card-body">
-                    <table class="table table-bordered table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Nama</th>
-                                <th>Email</th>
-                                <th>Role</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($users as $user)
-                            <tr>
-                                <td>{{ $user->name }}</td>
-                                <td>{{ $user->email }}</td>
-                                <td>
-                                    @if($user->role_id == 1)
-                                        <span>Admin</span>
-                                    @elseif($user->role_id == 2)
-                                        <span>Bank</span>
-                                    @else
-                                        <span>Siswa</span>
-                                    @endif
-                                </td>
-                                <td>
-                                <a href="javascript:void(0)" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editModal" data-user-id="{{ $user->id }}" data-user-name="{{ $user->name }}" data-user-email="{{ $user->email }}">Edit</a>
+<div class="container py-4">
+    <h2 class="mb-4">Welcome, {{ Auth::user()->name }}</h2>
 
-                                    <form action="{{ route("admin.delete", $user->id) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        @method('DELETE')    
-                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this user?')">Hapus</button>
-                                    </form>
-                                </td>
-                            </tr>
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Jumlah Siswa Terdaftar</h5>
+            <p class="card-text fs-4">125</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Total Saldo Tersimpan</h5>
+            <p class="card-text fs-4">110</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Jumlah Transaksi Top-Up</h5>
+            <p class="card-text fs-4">15</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row mb-4">
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title"> Jumlah Transaksi Withdraw</h5>
+            <p class="card-text fs-4">125</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title"> Total Transfer Antar Siswa</h5>
+            <p class="card-text fs-4">110</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Pending Transaksi</h5>
+            <p class="card-text fs-4">15</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabel data pengguna -->
+    <table class="table table-bordered table-hover">
+      <thead class="table-dark">
+        <tr>
+          <th>Nama</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+            @foreach ($users as $user)
+            <tr>
+                <td>{{ $user->name }}</td>
+                <td>{{ $user->email }}</td>
+                <td>
+                    @if($user->role_id == 1)
+                        <span>Admin</span>
+                    @elseif($user->role_id == 2)
+                        <span>Bank</span>
+                    @else
+                        <span>Siswa</span>
+                    @endif
+                </td>
+                <td>
+                <a href="javascript:void(0)" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editModal" data-user-id="{{ $user->id }}" data-user-name="{{ $user->name }}" data-user-email="{{ $user->email }}">Edit</a>
+
+                    <form action="{{ route("admin.delete", $user->id) }}" method="POST" class="d-inline">
+                        @csrf
+                        @method('DELETE')    
+                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this user?')">Hapus</button>
+                    </form>
+                </td>
+            </tr>
+            @endforeach
+
+            @if ($users->isEmpty())
+            <tr>
+                <td colspan="4" class="text-center text-muted">Belum ada user.</td>
+            </tr>
+            @endif
+        </tbody>
+    </table>
+</div>
+
+    
+<div class="container py-5">
+    <div class="card mb-4 shadow">
+        <div class="card-body">
+            <div class="container">
+                <h1 class="mb-0">Create New User</h1>
+
+                @if(session('success'))
+                    <div class="alert alert-success">{{ session('success') }}</div>
+                @endif
+
+                @if($errors->any())
+                    <div class="alert alert-danger">
+                        <ul>
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
                             @endforeach
-
-                            @if ($users->isEmpty())
-                            <tr>
-                                <td colspan="4" class="text-center text-muted">Belum ada user.</td>
-                            </tr>
-                            @endif
-                        </tbody>
-                    </table>
-                    <div class="container">
-                        <h1 class="mb-0">Create New User</h1>
-
-                        @if(session('success'))
-                            <div class="alert alert-success">{{ session('success') }}</div>
-                        @endif
-
-                        @if($errors->any())
-                            <div class="alert alert-danger">
-                                <ul>
-                                    @foreach($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        @endif
-
-                        <form action="{{ route('admin.store') }}" method="POST">
-                            @csrf
-                            <div class="mb-3">
-                                <label for="name" class="form-label">Name</label>
-                                <input type="text" name="name" class="form-control" value="{{ old('name') }}">
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="email" class="form-label">Email</label>
-                                <input type="email" name="email" class="form-control" value="{{ old('email') }}">
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="password" class="form-label">Password</label>
-                                <input type="password" name="password" class="form-control">
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="password_confirmation" class="form-label">Confirm Password</label>
-                                <input type="password" name="password_confirmation" class="form-control" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="role_id" class="form-label">Role</label>
-                                <select name="role_id" id="form-control">
-                                    <option value="1">Admin</option>
-                                    <option value="2">Bank</option>
-                                    <option value="3" selected>Siswa</option>
-                                </select>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary">Add User</button>
-                        </form>
+                        </ul>
                     </div>
-                </div>
+                @endif
+
+                <form action="{{ route('admin.store') }}" method="POST">
+                    @csrf
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name</label>
+                        <input type="text" name="name" class="form-control" value="{{ old('name') }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" value="{{ old('email') }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password_confirmation" class="form-label">Confirm Password</label>
+                        <input type="password" name="password_confirmation" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="role_id" class="form-label">Role</label>
+                        <select name="role_id" id="form-control">
+                            <option value="1">Admin</option>
+                            <option value="2">Bank</option>
+                            <option value="3" selected>Siswa</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Add User</button>
+                </form>
             </div>
         </div>
     </div>
+</div>
 {{-- Modal Edit User --}}
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -175,6 +231,10 @@
 </script>
 </body>
 {{--------------------------------------------------------------END ADMIN SPACE--------------------------------------------------------------}}
+
+
+
+
 
 
 
@@ -320,6 +380,12 @@
     </div>
 </div>
 {{--------------------------------------------------------------END BANK SPACE--------------------------------------------------------------}}
+
+
+
+
+
+
 
 {{--------------------------------------------------------------START SISWA SPACE--------------------------------------------------------------}}
 @elseif($content == 'siswa_content')
