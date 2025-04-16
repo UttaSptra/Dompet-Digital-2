@@ -313,17 +313,17 @@ class HomeController extends Controller
     public function siswatransfer (Request $request )
     {
         $request->validate([
-            'target_transfer' => 'required|exists:users,account_number|different:from_account',
+            'target_transfer' => 'required|exists:users,account_number|different:account_number',
             'amount' => 'required|numeric|min:1',
         ]);
 
          // Ambil pengguna pengirim dan penerima berdasarkan account_number
-         $fromUser = User::where('account_number', $request->from_account)->first();
-         $toUser = User::where('account_number', $request->to_account)->first();
+         $fromUser = User::where('account_number', $request->account_number)->first();
+         $toUser = User::where('account_number', $request->target_transfer)->first();
          $amount = $request->amount;
 
         // Cek saldo cukup
-        if ($fromUser->balance < $amount) {
+        if ($fromUser->balance > $amount) {
             return response()->json(['message' => 'Your balance is insufficient!'], 400);
         }
 
@@ -340,10 +340,11 @@ class HomeController extends Controller
                 'to_user_id' => $toUser->id,
                 'account_number' => Auth::user()->account_number, 
                 'target_transfer' => $request->target_transfer,
-                'amount' => $amount->amount,
-                'status' => 'success',
+                'amount' => $request->amount,
+                'status' => 'approved',
             ]);
         });
+        \Log::info('Transfer successful', ['user' => Auth::user()->id, 'amount' => $amount]);
         return response()->json(['message' => 'Transfer successfully!']);
     }
 

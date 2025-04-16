@@ -380,7 +380,7 @@
                         @csrf
                         <div class="mb-3">
                             <label for="to_account" class="form-label">No Rekening Tujuan</label>
-                            <input type="text" class="form-control" name="to_account" required>
+                            <input type="text" class="form-control" name="target_transfer" required>
                         </div>
                         <div class="mb-3">
                             <label for="amount" class="form-label">Jumlah Transfer</label>
