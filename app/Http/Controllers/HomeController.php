@@ -21,37 +21,55 @@ class HomeController extends Controller
     {
         $user = Auth::user();
 
-    if ($user->role_id == 1) {
-        // Aksi untuk Admin
-        $content = 'admin_content';
-    } elseif ($user->role_id == 2) {
-        // Aksi untuk Bank
-        $content = 'bank_content';
-    } elseif ($user->role_id == 3) {
-        // Aksi untuk Siswa
-        $content = 'siswa_content';
-    } else {
-        $content = 'default_content'; // Untuk role yang tidak dikenali
-    }
-
-    
+        if ($user->role_id == 1) {
+            // Aksi untuk Admin
+            $content = 'admin_content';
+        } elseif ($user->role_id == 2) {
+            // Aksi untuk Bank
+            $content = 'bank_content';
+        } elseif ($user->role_id == 3) {
+            // Aksi untuk Siswa
+            $content = 'siswa_content';
+        } else {
+            $content = 'default_content'; // Untuk role yang tidak dikenali
+        }
+        
         $users = User::all();
         $top_up = Transaction::where('status', 'pending')->get(); 
-        return view('dashboard', compact('users','user', 'top_up', 'content'));
+        $transactions = $user->transactions()->orderBy('created_at', 'desc')->get();
+        $saldo = $user->balance; // saldo terbaru
+        $processedTransactions = [];
+    
+        foreach ($transactions as $transaction) {
+            // saldo setelah transaksi adalah saldo sekarang
+            $saldoSetelah = $saldo;
+    
+            // saldo sebelum = saldo setelah -/+ jumlah tergantung jenis transaksi
+            if ($transaction->type === 'topup') {
+                $saldoSebelum = $saldoSetelah - $transaction->amount;
+            } elseif (in_array($transaction->type, ['withdraw', 'transfer'])) {
+                $saldoSebelum = $saldoSetelah + $transaction->amount;
+            } else {
+                $saldoSebelum = $saldoSetelah; // fallback
+            }
+    
+            // simpan data yang sudah dihitung
+            $processedTransactions[] = (object) [
+                'created_at'     => $transaction->created_at,
+                'type'           => $transaction->type,
+                'amount'         => $transaction->amount,
+                'saldo_awal'     => $saldoSebelum,
+                'saldo_setelah'  => $saldoSetelah,
+            ];
+        // update saldo buat transaksi berikutnya
+        $saldo = $saldoSebelum;
+        }    
+        
+        
+        return view('dashboard', compact('users','user', 'top_up', 'content', 'transactions'));
     }
 
     //====================Admin====================\\
-    public function adminindex() 
-    {
-        #Menampilkan seluruh User yang ada di table Users
-        $users = User::all();
-        return view('dashboard', compact('users', ));
-    }
-    public function admincreate()
-    {
-        return view('admin.index');
-        
-    }
     public function adminstore(Request $request)
     {
         #validasi apa saja yang dibutuhkan
@@ -78,11 +96,7 @@ class HomeController extends Controller
         $user = User::create($userData);
             return redirect()->route('dashboard')->with('success', 'User has been successfully created!');
     }
-    public function adminedit($id)
-    {
-        $user = User::findOrFail($id);
-        return view('dashboard');  
-    }
+ 
     public function adminupdate(Request $request)
     {
         
@@ -155,11 +169,12 @@ class HomeController extends Controller
                 return back()->with('error', 'Saldo user tidak mencukupi untuk withdraw.');
             }
         } else {
-            return back()->with('error', 'Jenis transaksi tidak dikenali.');
+                return back()->with('error', 'Jenis transaksi tidak dikenali.');
         }
     }
 
-    public function bankreject($id) {
+    public function bankreject($id) 
+    {
         $topup = Transaction::findOrFail($id);
         $topup->update([
             'status' => 'rejected',
@@ -282,6 +297,41 @@ class HomeController extends Controller
         $user = User::create($userData);
         return redirect()->route('dashboard')->with('success', 'User has been successfully created!');
     }
+
+    public function printTransaction($userId)
+    {
+        $user = User::findOrFail($userId);
+
+        if ($user->role_id == 2) { // role_id 2 untuk Bank
+            $transactions = Transaction::with('user')->orderBy('created_at', 'asc')->get();
+        } else {
+            $transactions = Transaction::where('user_id', $userId)->orderBy('created_at', 'asc')->get();
+        }
+
+        $allData = [];
+
+        foreach ($transactions as $t) {
+            $saldoSebelumnya = isset($allData[count($allData) - 1])
+                ? $allData[count($allData) - 1]['saldo_setelah']
+                : 0;
+
+            $saldoSetelah = $t->type === 'debit'
+                ? $saldoSebelumnya - $t->amount
+                : $saldoSebelumnya + $t->amount;
+
+            $allData[] = [
+                'transaction' => $t,
+                'saldo_awal' => $saldoSebelumnya,
+                'saldo_setelah' => $saldoSetelah
+            ];
+        }
+
+        return view('transaction_print', [
+            'user' => $user,
+            'transactions' => $allData
+        ]);
+    }
+
     
 
 //====================Siswa====================\\
