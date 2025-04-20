@@ -14,15 +14,17 @@ use App\Http\Controllers\AuthController;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
+Route::get('/', function () {
+    return view('auth.login');
+});
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware(['auth', 'is_admin'])->group(function () {
-    Route::get('/admin', [HomeController::class, 'adminindex'])->name('admin.index');
+    Route::get('/admin', [HomeController::class, 'dashboard'])->name('admin.index');
     Route::post('/admin', [HomeController::class, 'adminstore'])->name('admin.store');
-    Route::get('/admin/edit/{id}', [HomeController::class, 'adminedit'])->name('admin.edit');
     Route::put('/admin', [HomeController::class, 'adminupdate'])->name('admin.update');
     Route::delete('/admin/delete/{id}', [HomeController::class, 'destroy'])->name('admin.delete');
 });
@@ -30,6 +32,7 @@ Route::middleware(['auth', 'is_admin'])->group(function () {
 Route::middleware(['auth', 'is_bank'])->group(function () {
     Route::get('/bank', [HomeController::class, 'bankindex'])->name('bank.index');
     Route::get('/bank/topups', [HomeController::class, 'bankindex'])->name('bank.topups');
+    Route::get('/bank/print/{userId}', [HomeController::class, 'printTransaction'])->name('transaction.print');
     Route::post('/bank/topups/{id}/approve', [HomeController::class, 'bankapprove'])->name('bank.topups.approve');
     Route::post('/bank/topups/{id}/reject', [HomeController::class, 'bankreject'])->name('bank.topups.reject');
     Route::post('/bank/cash-deposit/{userId}', [HomeController::class, 'bankcashdeposit'])->name('bank.cash.deposit');
